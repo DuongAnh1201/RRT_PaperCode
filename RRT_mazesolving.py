@@ -3,6 +3,9 @@ import numpy as np
 import math
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
+import csv
+from datetime import datetime
+import os
 
 class Obstacle:
     def __init__(self, obstacle=None):
@@ -14,48 +17,43 @@ class Obstacle:
             # Assumed Map Size: 10x10 area
             self.obstacle = [
     # --- Outer Boundary (with entry top-left and exit bottom-right) ---
-    ((0, 0), (0, 10)),    # Left wall
-    ((1, 10), (10, 10)),  # Top wall (gap from x=0..1 for entry)
-    ((10, 10), (10, 1)),  # Right wall (gap from y=0..1 for exit)
-    ((10, 0), (0, 0)),    # Bottom wall
+    ((0, 0), (0, 10)),
+    ((1, 10), (10, 10)),
+    ((10, 10), (10, 1)),
+    ((10, 0), (0, 0)),
 
-    # --- Internal Walls (10x10 grid-aligned, structure-preserving) ---
-    # Top band
+    # --- Internal Walls (your original structure) ---
     ((1, 9), (4, 9)),
     ((4, 9), (4, 6)),
     ((4, 7), (6, 7)),
     ((6, 9), (9, 9)),
-    ((8, 10), (8, 9.2)),  # short top connector
+    ((8, 10), (8, 9.2)),
 
-    # Upper-left cluster
     ((1.5, 8), (3.5, 8)),
     ((1.5, 8), (1.5, 6.5)),
     ((3.5, 8), (3.5, 7)),
     ((1.5, 6.5), (2.5, 6.5)),
 
-    # Upper-center / upper-right connectors
     ((5, 10), (5, 8.2)),
     ((6.5, 8), (6.5, 6)),
     ((7.5, 8.5), (7.5, 7.5)),
     ((9, 8), (9, 6.2)),
 
-    # Middle big barriers
     ((0.8, 6), (3.2, 6)),
     ((3.2, 6), (3.2, 4)),
     ((3.2, 4), (6.8, 4)),
     ((6.8, 4), (6.8, 2)),
+    ((2, 4), (2, 6.5)),
 
-    # Center features (vertical corridors / boxes)
     ((2.8, 5.2), (2.8, 3.2)),
     ((4.8, 6.2), (4.8, 5)),
     ((5.8, 6.2), (5.8, 4.4)),
     ((7.2, 5.5), (7.2, 3.8)),
 
-    # Middle-left horizontal connectors
     ((0.5, 4.5), (2.5, 4.5)),
     ((1, 3.2), (2.2, 3.2)),
+    ((1.2, 2.5), (1.2, 4 )),
 
-    # Lower-middle pattern (meandering)
     ((1.8, 3.2), (1.8, 1.8)),
     ((1.8, 1.8), (4.2, 1.8)),
     ((4.2, 1.8), (4.2, 3.6)),
@@ -63,13 +61,11 @@ class Obstacle:
     ((6.2, 3.6), (6.2, 2.4)),
     ((6.2, 2.4), (8.2, 2.4)),
 
-    # Lower-left spiral-ish
     ((0.8, 2.2), (0.8, 0.8)),
     ((0.8, 2.2), (2.2, 2.2)),
     ((2.2, 2.2), (2.2, 0.8)),
     ((2.2, 0.8), (4.6, 0.8)),
 
-    # Lower-right connectors & dead-ends
     ((5.6, 1.6), (8.0, 1.6)),
     ((8.0, 1.6), (8.0, 3.2)),
     ((8.0, 3.2), (9.2, 3.2)),
@@ -77,15 +73,62 @@ class Obstacle:
     ((9.2, 4.2), (9.2, 6.2)),
     ((7.8, 5.2), (9.2, 5.2)),
 
-    # Small interior stubs to capture tight corridors
     ((3.8, 2.8), (5.0, 2.8)),
     ((4.6, 4.8), (5.6, 4.8)),
     ((2.8, 7.2), (4.6, 7.2)),
 
-    # A few short separators to reflect image detail
     ((6.8, 7.8), (6.8, 7.0)),
     ((3.0, 0.8), (3.0, 1.8)),
     ((8.8, 0.8), (8.8, 1.4)),
+
+    # ------------------------------------------------------
+    # -------- ADDED OBSTACLES (Free-space difficulty) -----
+    # ------------------------------------------------------
+
+    # Top-left free region fillers
+    ((0.8, 9.5), (2.2, 9.5)),
+    ((2.2, 9.5), (2.2, 8.8)),
+    ((0.8, 8.7), (1.8, 8.7)),
+
+    # Mid-top open area (add navigation traps)
+    ((5.5, 9.3), (7.2, 9.3)),
+    ((7.2, 9.3), (7.2, 8.4)),
+    ((5.6, 8.5), (6.4, 8.5)),
+
+    # Upper-middle large empty zone
+    ((2.0, 7.5), (2.0, 6.8)),
+    ((2.0, 7.5), (3.0, 7.5)),
+    ((3.0, 7.5), (3.0, 6.8)),
+    ((6.0, 7.5), (6.0, 6.8)),
+    ((6.0, 7.5), (7.0, 7.5)),
+
+    # Center-top right open region
+    ((7.8, 7.8), (9.0, 7.8)),
+    ((8.4, 7.8), (8.4, 6.9)),
+
+    # Middle slightly-empty corridor
+    ((5.0, 5.5), (6.4, 5.5)),
+    ((6.4, 5.5), (6.4, 4.9)),
+    ((3.6, 5.0), (4.0, 5.0)),
+    ((4.0, 5.0), (4.0, 4.4)),
+
+    # Middle-right vertical chambers
+    ((7.8, 4.6), (7.8, 3.4)),
+    ((8.4, 4.6), (8.4, 3.9)),
+
+    # Lower-middle small open space
+    ((5.0, 3.0), (6.5, 3.0)),
+    ((6.5, 3.0), (6.5, 2.6)),
+
+    # Lower-left open area extra traps
+    ((1.0, 2.0), (1.0, 1.2)),
+    ((1.0, 1.2), (1.8, 1.2)),
+    ((3.0, 1.4), (4.0, 1.4)),
+
+    # Lower-right
+    ((7.4, 1.0), (8.6, 1.0)),
+    ((8.6, 1.0), (8.6, 1.8)),
+    ((6.8, 2.1), (7.6, 2.1)),
 ]
 
         return self.obstacle
@@ -289,9 +332,110 @@ class RRT:
             node = node.parent
         return path[::-1]  # Reverse the path
     
-    def visualize(self, title="RRT Path Planning", show_tree=True, show_path=True, figsize=(10, 10)):
+    def get_path_length(self):
+        """Calculate the total path length if path exists."""
+        if self._path is None or len(self._path) < 2:
+            return 0.0
+        total_length = 0.0
+        for i in range(len(self._path) - 1):
+            dx = self._path[i+1][0] - self._path[i][0]
+            dy = self._path[i+1][1] - self._path[i][1]
+            total_length += math.hypot(dx, dy)
+        return total_length
+    
+    def save_run_data(self, filename="rrt_results.csv", start_pos=None, goal_pos=None):
+        """
+        Save the current run's data to a CSV file.
+        
+        Args:
+            filename: Name of the CSV file to save to (default: "rrt_results.csv")
+            start_pos: Tuple (x, y) of start position (optional, will use self._start if not provided)
+            goal_pos: Tuple (x, y) of goal position (optional, will use self._goal if not provided)
+        """
+        # Get positions
+        if start_pos is None:
+            start_pos = (self._start.x, self._start.y)
+        if goal_pos is None:
+            goal_pos = (self._goal.x, self._goal.y)
+        
+        # Calculate path length
+        path_length = self.get_path_length() if self._goal_reached else 0.0
+        
+        # Generate unique key for linking CSV and image
+        unique_key = datetime.now().strftime('%Y%m%d_%H%M%S_%f')[:-3]  # Include milliseconds
+        
+        # Prepare data
+        data = {
+            'run_key': unique_key,
+            'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            'path_found': self._goal_reached,
+            'iterations': self._max_iter,
+            'nodes_in_tree': len(self._node_list),
+            'path_length': path_length,
+            'path_nodes': len(self._path) if self._path else 0,
+            'step_size': self.step_size,
+            'start_x': start_pos[0],
+            'start_y': start_pos[1],
+            'goal_x': goal_pos[0],
+            'goal_y': goal_pos[1],
+            'map_size': self._map_size,
+            'image_filename': f"rrt_{unique_key}.png"
+        }
+        
+        # Check if file exists to determine if we need headers
+        file_exists = os.path.isfile(filename)
+        
+        # Write to CSV
+        with open(filename, 'a', newline='') as csvfile:
+            fieldnames = ['run_key', 'timestamp', 'path_found', 'iterations', 'nodes_in_tree', 
+                         'path_length', 'path_nodes', 'step_size', 'start_x', 'start_y', 
+                         'goal_x', 'goal_y', 'map_size', 'image_filename']
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            
+            # Write header if file is new
+            if not file_exists:
+                writer.writeheader()
+            
+            # Write data row
+            writer.writerow(data)
+        
+        print(f"✓ Run data saved to {filename} (Key: {unique_key})")
+        return data
+    
+    def save_figure(self, fig, image_filename, folder="rrt_images"):
+        """
+        Save the matplotlib figure to a folder.
+        
+        Args:
+            fig: Matplotlib figure object
+            image_filename: Name of the image file
+            folder: Folder name to save images (default: "rrt_images")
+        """
+        # Create folder if it doesn't exist
+        if not os.path.exists(folder):
+            os.makedirs(folder)
+            print(f"✓ Created folder: {folder}")
+        
+        # Full path for the image
+        image_path = os.path.join(folder, image_filename)
+        
+        # Save the figure
+        fig.savefig(image_path, dpi=150, bbox_inches='tight')
+        print(f"✓ Chart saved to {image_path}")
+        return image_path
+    
+    def visualize(self, title="RRT Path Planning", show_tree=True, show_path=True, 
+                  figsize=(10, 10), save_image=False, image_filename=None):
         """
         Visualize the RRT tree, obstacles, start, goal, and path.
+        
+        Args:
+            title: Title of the plot
+            show_tree: Whether to show the RRT tree
+            show_path: Whether to show the final path
+            figsize: Figure size (width, height)
+            save_image: Whether to save the image
+            image_filename: Name of the image file (if None, will be generated)
         """
         fig, ax = plt.subplots(figsize=figsize)
         
@@ -365,6 +509,13 @@ class RRT:
                bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.8))
         
         plt.tight_layout()
+        
+        # Save image if requested
+        if save_image:
+            if image_filename is None:
+                image_filename = f"rrt_{datetime.now().strftime('%Y%m%d_%H%M%S_%f')[:-3]}.png"
+            self.save_figure(fig, image_filename)
+        
         return fig, ax
     
     def visualize_animation(self, step=10, title="RRT Path Planning Animation", figsize=(10, 10)):
@@ -454,16 +605,121 @@ def visualize_rrt_example():
     print("Running RRT path planning...")
     rrt.plan()
     
+    # Save run data (this generates a unique key and image filename)
+    data = rrt.save_run_data("rrt_results.csv", 
+                             start_pos=(start_node.x, start_node.y),
+                             goal_pos=(goal_node.x, goal_node.y))
+    
+    # Get the image filename from the saved data
+    image_filename = data['image_filename']
+    
     if rrt._goal_reached:
         print(f"✓ Goal reached! Path found with {len(rrt._path)} nodes.")
-        fig, ax = rrt.visualize(title="RRT Maze Solving - Final Result")
+        fig, ax = rrt.visualize(title="RRT Maze Solving - Final Result", 
+                               save_image=True, image_filename=image_filename)
         plt.show()
     else:
         print("✗ Goal not reached. Showing current tree:")
-        fig, ax = rrt.visualize(title="RRT Maze Solving - No Path Found")
+        fig, ax = rrt.visualize(title="RRT Maze Solving - No Path Found",
+                               save_image=True, image_filename=image_filename)
         plt.show()
     
     return rrt
 
+def run_multiple_experiments(num_runs=3, start_pos=(0.5, 9.5), goal_pos=(10, 0), 
+                             map_size=10, max_iter=50000, step_size=0.3, 
+                             visualize=False, save_file="rrt_results.csv"):
+    """
+    Run multiple RRT experiments and save all results.
+    
+    Args:
+        num_runs: Number of experiments to run
+        start_pos: Tuple (x, y) of start position
+        goal_pos: Tuple (x, y) of goal position
+        map_size: Size of the map
+        max_iter: Maximum iterations per run
+        step_size: Step size for RRT
+        visualize: Whether to show visualization (only shows last run)
+        save_file: CSV file to save results to
+    """
+    obstacles = Obstacle()
+    obstacles.default()
+    
+    results = []
+    success_count = 0
+    
+    print(f"Running {num_runs} experiments...")
+    print("-" * 60)
+    
+    for run_num in range(1, num_runs + 1):
+        print(f"Run {run_num}/{num_runs}...", end=" ")
+        
+        start_node = Node(start_pos[0], start_pos[1])
+        goal_node = Node(goal_pos[0], goal_pos[1])
+        
+        rrt = RRT(start=start_node, 
+                 goal=goal_node, 
+                 map_size=map_size, 
+                 obstacle=obstacles, 
+                 iter=max_iter, 
+                 step_size=step_size)
+        
+        rrt.plan()
+        
+        # Save data (this generates a unique key and image filename)
+        data = rrt.save_run_data(save_file, start_pos, goal_pos)
+        results.append(data)
+        
+        # Get the image filename from the saved data
+        image_filename = data['image_filename']
+        
+        if rrt._goal_reached:
+            success_count += 1
+            print(f"✓ Success (Path length: {data['path_length']:.2f}, Nodes: {data['nodes_in_tree']})")
+        else:
+            print(f"✗ Failed (Nodes: {data['nodes_in_tree']})")
+        
+        # Save image for this run
+        if rrt._goal_reached:
+            fig, ax = rrt.visualize(title=f"RRT Run {run_num} - Final Result",
+                                   save_image=True, image_filename=image_filename)
+        else:
+            fig, ax = rrt.visualize(title=f"RRT Run {run_num} - No Path Found",
+                                   save_image=True, image_filename=image_filename)
+        
+        # Close figure to free memory (only show if it's the last run and visualize=True)
+        if visualize and run_num == num_runs:
+            plt.show()
+        else:
+            plt.close(fig)
+    
+    # Print summary statistics
+    print("-" * 60)
+    print(f"Summary Statistics ({num_runs} runs):")
+    print(f"  Success Rate: {success_count}/{num_runs} ({100*success_count/num_runs:.1f}%)")
+    
+    if success_count > 0:
+        successful_runs = [r for r in results if r['path_found']]
+        avg_path_length = sum(r['path_length'] for r in successful_runs) / len(successful_runs)
+        avg_nodes = sum(r['nodes_in_tree'] for r in successful_runs) / len(successful_runs)
+        avg_path_nodes = sum(r['path_nodes'] for r in successful_runs) / len(successful_runs)
+        
+        print(f"  Average Path Length: {avg_path_length:.2f}")
+        print(f"  Average Nodes in Tree: {avg_nodes:.0f}")
+        print(f"  Average Path Nodes: {avg_path_nodes:.0f}")
+    
+    avg_all_nodes = sum(r['nodes_in_tree'] for r in results) / len(results)
+    print(f"  Average Nodes (all runs): {avg_all_nodes:.0f}")
+    print(f"  Results saved to: {save_file}")
+    
+    return results
+
+
 if __name__ == "__main__":
-    rrt_result = visualize_rrt_example()
+    # Run single example with visualization
+    for i in range(1, 11): #Run from 1 to 4
+        rrt_result = run_multiple_experiments(100,(0.5,10),(10,0), 
+        10, 50000, i/10)
+    
+    # Uncomment below to run multiple experiments without visualization
+    # results = run_multiple_experiments(num_runs=20, visualize=False)
