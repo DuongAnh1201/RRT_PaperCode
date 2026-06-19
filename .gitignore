@@ -41,3 +41,6 @@ Thumbs.db
 *.log
 *.pyc
 
+#images
+rrt_images_maze1
+rrt_images_maze2
