@@ -15,121 +15,32 @@ class Obstacle:
         if self.obstacle is None:
             # Format: [((x1, y1), (x2, y2)), ...]
             # Assumed Map Size: 10x10 area
-            self.obstacle = [
-    # --- Outer Boundary (with entry top-left and exit bottom-right) ---
-    ((0, 0), (0, 10)),
-    ((1, 10), (10, 10)),
-    ((10, 10), (10, 1)),
-    ((10, 0), (0, 0)),
-
-    # --- Internal Walls (your original structure) ---
-    ((1, 9), (4, 9)),
-    ((4, 9), (4, 6)),
-    ((4, 7), (6, 7)),
-    ((6, 9), (9, 9)),
-    ((8, 10), (8, 9.2)),
-
-    ((1.5, 8), (3.5, 8)),
-    ((1.5, 8), (1.5, 6.5)),
-    ((3.5, 8), (3.5, 7)),
-    ((1.5, 6.5), (2.5, 6.5)),
-
-    ((5, 10), (5, 8.2)),
-    ((6.5, 8), (6.5, 6)),
-    ((7.5, 8.5), (7.5, 7.5)),
-    ((9, 8), (9, 6.2)),
-
-    ((0.8, 6), (3.2, 6)),
-    ((3.2, 6), (3.2, 4)),
-    ((3.2, 4), (6.8, 4)),
-    ((6.8, 4), (6.8, 2)),
-    ((2, 4), (2, 6.5)),
-
-    ((2.8, 5.2), (2.8, 3.2)),
-    ((4.8, 6.2), (4.8, 5)),
-    ((5.8, 6.2), (5.8, 4.4)),
-    ((7.2, 5.5), (7.2, 3.8)),
-
-    ((0.5, 4.5), (2.5, 4.5)),
-    ((1, 3.2), (2.2, 3.2)),
-    ((1.2, 2.5), (1.2, 4 )),
-
-    ((1.8, 3.2), (1.8, 1.8)),
-    ((1.8, 1.8), (4.2, 1.8)),
-    ((4.2, 1.8), (4.2, 3.6)),
-    ((4.2, 3.6), (6.2, 3.6)),
-    ((6.2, 3.6), (6.2, 2.4)),
-    ((6.2, 2.4), (8.2, 2.4)),
-
-    ((0.8, 2.2), (0.8, 0.8)),
-    ((0.8, 2.2), (2.2, 2.2)),
-    ((2.2, 2.2), (2.2, 0.8)),
-    ((2.2, 0.8), (4.6, 0.8)),
-
-    ((5.6, 1.6), (8.0, 1.6)),
-    ((8.0, 1.6), (8.0, 3.2)),
-    ((8.0, 3.2), (9.2, 3.2)),
-    ((7.2, 0.8), (7.2, 2.0)),
-    ((9.2, 4.2), (9.2, 6.2)),
-    ((7.8, 5.2), (9.2, 5.2)),
-
-    ((3.8, 2.8), (5.0, 2.8)),
-    ((4.6, 4.8), (5.6, 4.8)),
-    ((2.8, 7.2), (4.6, 7.2)),
-
-    ((6.8, 7.8), (6.8, 7.0)),
-    ((3.0, 0.8), (3.0, 1.8)),
-    ((8.8, 0.8), (8.8, 1.4)),
-
-    # ------------------------------------------------------
-    # -------- ADDED OBSTACLES (Free-space difficulty) -----
-    # ------------------------------------------------------
-
-    # Top-left free region fillers
-    ((0.8, 9.5), (2.2, 9.5)),
-    ((2.2, 9.5), (2.2, 8.8)),
-    ((0.8, 8.7), (1.8, 8.7)),
-
-    # Mid-top open area (add navigation traps)
-    ((5.5, 9.3), (7.2, 9.3)),
-    ((7.2, 9.3), (7.2, 8.4)),
-    ((5.6, 8.5), (6.4, 8.5)),
-
-    # Upper-middle large empty zone
-    ((2.0, 7.5), (2.0, 6.8)),
-    ((2.0, 7.5), (3.0, 7.5)),
-    ((3.0, 7.5), (3.0, 6.8)),
-    ((6.0, 7.5), (6.0, 6.8)),
-    ((6.0, 7.5), (7.0, 7.5)),
-
-    # Center-top right open region
-    ((7.8, 7.8), (9.0, 7.8)),
-    ((8.4, 7.8), (8.4, 6.9)),
-
-    # Middle slightly-empty corridor
-    ((5.0, 5.5), (6.4, 5.5)),
-    ((6.4, 5.5), (6.4, 4.9)),
-    ((3.6, 5.0), (4.0, 5.0)),
-    ((4.0, 5.0), (4.0, 4.4)),
-
-    # Middle-right vertical chambers
-    ((7.8, 4.6), (7.8, 3.4)),
-    ((8.4, 4.6), (8.4, 3.9)),
-
-    # Lower-middle small open space
-    ((5.0, 3.0), (6.5, 3.0)),
-    ((6.5, 3.0), (6.5, 2.6)),
-
-    # Lower-left open area extra traps
-    ((1.0, 2.0), (1.0, 1.2)),
-    ((1.0, 1.2), (1.8, 1.2)),
-    ((3.0, 1.4), (4.0, 1.4)),
-
-    # Lower-right
-    ((7.4, 1.0), (8.6, 1.0)),
-    ((8.6, 1.0), (8.6, 1.8)),
-    ((6.8, 2.1), (7.6, 2.1)),
-]
+            self.obstacle =[
+        # --- Outer Boundary (entry: bottom-left, exit: top-right) ---
+        ((0, 0), (10, 0)),
+        ((0, 1), (0, 10)),
+        ((0, 10), (10, 10)),
+        ((10, 0), (10, 9)),
+ 
+        # --- Internal Walls — horizontal ---
+        ((2, 1), (3, 1)), ((5, 1), (8, 1)), ((1, 2), (3, 2)),
+        ((6, 2), (7, 2)), ((8, 2), (9, 2)), ((2, 3), (4, 3)),
+        ((5, 3), (6, 3)), ((7, 3), (8, 3)), ((4, 4), (5, 4)),
+        ((6, 4), (7, 4)), ((8, 4), (10, 4)), ((5, 5), (6, 5)),
+        ((7, 5), (8, 5)), ((1, 6), (3, 6)), ((4, 6), (5, 6)),
+        ((6, 6), (7, 6)), ((8, 6), (9, 6)), ((2, 7), (4, 7)),
+        ((9, 7), (10, 7)), ((1, 8), (3, 8)), ((6, 8), (7, 8)),
+        ((3, 9), (5, 9)), ((7, 9), (9, 9)),
+ 
+        # --- Internal Walls — vertical ---
+        ((1, 2), (1, 4)), ((1, 6), (1, 7)), ((2, 3), (2, 5)),
+        ((2, 9), (2, 10)), ((3, 4), (3, 5)), ((3, 7), (3, 8)),
+        ((4, 2), (4, 3)), ((4, 8), (4, 9)), ((5, 1), (5, 4)),
+        ((5, 5), (5, 7)), ((6, 3), (6, 4)), ((6, 6), (6, 7)),
+        ((6, 8), (6, 9)), ((7, 4), (7, 5)), ((7, 7), (7, 9)),
+        ((8, 1), (8, 2)), ((8, 3), (8, 4)), ((8, 6), (8, 7)),
+        ((9, 2), (9, 3)), ((9, 4), (9, 5)), ((9, 7), (9, 9)),
+    ]
 
         return self.obstacle
 
@@ -145,7 +56,7 @@ class Node:
         self.cost = 0
 
 class RRT:
-    def __init__(self, start, goal, map_size, obstacle=obs, iter=500, step_size=1):
+    def __init__(self, start, goal, map_size, obstacle=obs, iter=500, step_size=1, random_rate = 0.1):
         self._start = start
         self._goal = goal
         self._map_size = map_size
@@ -156,10 +67,13 @@ class RRT:
         self._max_iter = iter
         self.step_size = step_size
         self._obstacle_lines = self.obs_to_line()
+        self._random_rate = random_rate
+        self._iterations_used = 0
+        self._rejected_nodes = []
     
     def random_node(self):
         """Generate a random node in the map."""
-        if random.random() <= 0.7:
+        if random.random() <= self._random_rate:
             rand_node = Node(random.randint(0, self._map_size), random.randint(0, self._map_size))
         else:
             rand_node = Node(self._goal.x, self._goal.y)
@@ -181,11 +95,15 @@ class RRT:
             if self.is_collision_free(nearest_node, new_node):
                 new_node.parent = nearest_node
                 self._node_list.append(new_node)
-            
-            if self.reached_goal(new_node):
-                self._path = self.generate_final_path(new_node)
-                self._goal_reached = True
-                return
+
+                if self.reached_goal(new_node):
+                    self._path = self.generate_final_path(new_node)
+                    self._goal_reached = True
+                    self._iterations_used = i + 1
+                    return
+            else:
+                self._rejected_nodes.append(new_node)
+        self._iterations_used = self._max_iter
     
     def steer(self, from_node, to_node):
         """Steer from one node to another, step-by-step."""
@@ -321,7 +239,7 @@ class RRT:
     def reached_goal(self, node):
         """Check if the node has reached the goal."""
         dist = math.hypot(node.x - self._goal.x, node.y - self._goal.y)
-        return dist <= self.step_size
+        return dist <= self.step_size and self.is_collision_free(node, self._goal)
 
     def generate_final_path(self, goal_node):
         """Generate the final path from the start to the goal."""
@@ -369,11 +287,12 @@ class RRT:
             'run_key': unique_key,
             'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
             'path_found': self._goal_reached,
-            'iterations': self._max_iter,
+            'iterations': self._iterations_used,
             'nodes_in_tree': len(self._node_list),
             'path_length': path_length,
             'path_nodes': len(self._path) if self._path else 0,
             'step_size': self.step_size,
+            'random_rate': self._random_rate,
             'start_x': start_pos[0],
             'start_y': start_pos[1],
             'goal_x': goal_pos[0],
@@ -388,7 +307,7 @@ class RRT:
         # Write to CSV
         with open(filename, 'a', newline='') as csvfile:
             fieldnames = ['run_key', 'timestamp', 'path_found', 'iterations', 'nodes_in_tree', 
-                         'path_length', 'path_nodes', 'step_size', 'start_x', 'start_y', 
+                         'path_length', 'path_nodes', 'step_size', 'random_rate', 'start_x', 'start_y', 
                          'goal_x', 'goal_y', 'map_size', 'image_filename']
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
             
@@ -402,7 +321,7 @@ class RRT:
         print(f"✓ Run data saved to {filename} (Key: {unique_key})")
         return data
     
-    def save_figure(self, fig, image_filename, folder="rrt_images"):
+    def save_figure(self, fig, image_filename, folder="rrt_results_maze3_postfix"):
         """
         Save the matplotlib figure to a folder.
         
@@ -450,6 +369,13 @@ class RRT:
                 x2, y2 = point2
                 ax.plot([x1, x2], [y1, y2], 'k-', linewidth=3, label='Obstacles' if obstacle == obstacles[0] else '')
         
+        # Draw rejected (collision-blocked) nodes
+        if self._rejected_nodes:
+            rej_x = [node.x for node in self._rejected_nodes]
+            rej_y = [node.y for node in self._rejected_nodes]
+            ax.scatter(rej_x, rej_y, c='orange', s=8, alpha=0.4,
+                      edgecolors='none', zorder=1, label='Rejected Nodes')
+
         # Draw RRT tree
         if show_tree and self._node_list:
             for node in self._node_list[1:]:
@@ -494,8 +420,9 @@ class RRT:
         ax.legend(by_label.values(), by_label.keys(), loc='upper right', fontsize=10)
         
         # Add info text
-        info_text = f"Iterations: {self._max_iter}\n"
-        info_text += f"Nodes: {len(self._node_list)}\n"
+        info_text = f"Iterations: {self._iterations_used}\n"
+        info_text += f"Nodes (tree): {len(self._node_list)}\n"
+        info_text += f"Nodes (rejected): {len(self._rejected_nodes)}\n"
         info_text += f"Goal Reached: {'Yes' if self._goal_reached else 'No'}"
         if self._path is not None:
             path_length = sum(math.hypot(self._path[i+1][0] - self._path[i][0], 
@@ -518,116 +445,117 @@ class RRT:
         
         return fig, ax
     
-    def visualize_animation(self, step=10, title="RRT Path Planning Animation", figsize=(10, 10)):
-        """
-        Visualize the RRT tree growth step by step.
-        """
-        fig, ax = plt.subplots(figsize=figsize)
+    # def visualize_animation(self, step=10, title="RRT Path Planning Animation", figsize=(10, 10), random_rate= 0.5):
+    #     """
+    #     Visualize the RRT tree growth step by step.
+    #     """
+    #     fig, ax = plt.subplots(figsize=figsize)
         
-        obstacles = self._obstacle.obstacle if hasattr(self._obstacle, 'obstacle') else self._obstacle
+    #     obstacles = self._obstacle.obstacle if hasattr(self._obstacle, 'obstacle') else self._obstacle
         
-        if obstacles:
-            for obstacle in obstacles:
-                point1, point2 = obstacle
-                x1, y1 = point1
-                x2, y2 = point2
-                ax.plot([x1, x2], [y1, y2], 'k-', linewidth=3)
+    #     if obstacles:
+    #         for obstacle in obstacles:
+    #             point1, point2 = obstacle
+    #             x1, y1 = point1
+    #             x2, y2 = point2
+    #             ax.plot([x1, x2], [y1, y2], 'k-', linewidth=3)
         
-        previous_node_count = 1
+    #     previous_node_count = 1
         
-        ax.scatter(self._start.x, self._start.y, c='green', s=200, 
-                  marker='o', edgecolors='darkgreen', linewidths=2, zorder=7, label='Start')
-        ax.scatter(self._goal.x, self._goal.y, c='red', s=200, 
-                  marker='*', edgecolors='darkred', linewidths=2, zorder=7, label='Goal')
+    #     ax.scatter(self._start.x, self._start.y, c='green', s=200, 
+    #               marker='o', edgecolors='darkgreen', linewidths=2, zorder=7, label='Start')
+    #     ax.scatter(self._goal.x, self._goal.y, c='red', s=200, 
+    #               marker='*', edgecolors='darkred', linewidths=2, zorder=7, label='Goal')
         
-        for i in range(self._max_iter):
-            rand_node = self.random_node()
-            nearest_node = self.nearest_node(self._node_list, rand_node)
-            new_node = self.steer(nearest_node, rand_node)
+    #     for i in range(self._max_iter):
+    #         rand_node = self.random_node(random_rate)
+    #         nearest_node = self.nearest_node(self._node_list, rand_node)
+    #         new_node = self.steer(nearest_node, rand_node)
 
-            if new_node and self.is_collision_free(nearest_node, new_node):
-                new_node.parent = nearest_node
-                self._node_list.append(new_node)
+    #         if new_node and self.is_collision_free(nearest_node, new_node):
+    #             new_node.parent = nearest_node
+    #             self._node_list.append(new_node)
                 
-                ax.plot([nearest_node.x, new_node.x], [nearest_node.y, new_node.y], 
-                       'lightblue', linewidth=0.5, alpha=0.6, zorder=1)
-                ax.scatter(new_node.x, new_node.y, c='lightblue', s=20, alpha=0.6, 
-                          edgecolors='blue', linewidths=0.5, zorder=2)
+    #             ax.plot([nearest_node.x, new_node.x], [nearest_node.y, new_node.y], 
+    #                    'lightblue', linewidth=0.5, alpha=0.6, zorder=1)
+    #             ax.scatter(new_node.x, new_node.y, c='lightblue', s=20, alpha=0.6, 
+    #                       edgecolors='blue', linewidths=0.5, zorder=2)
                 
-                if len(self._node_list) - previous_node_count >= step:
-                    ax.set_title(f"{title} - Iteration {i+1}, Nodes: {len(self._node_list)}", 
-                               fontsize=14, fontweight='bold')
-                    plt.pause(0.01)
-                    previous_node_count = len(self._node_list)
+    #             if len(self._node_list) - previous_node_count >= step:
+    #                 ax.set_title(f"{title} - Iteration {i+1}, Nodes: {len(self._node_list)}", 
+    #                            fontsize=14, fontweight='bold')
+    #                 plt.pause(0.01)
+    #                 previous_node_count = len(self._node_list)
             
-            if new_node and self.reached_goal(new_node):
-                self._path = self.generate_final_path(new_node)
-                self._goal_reached = True
+    #         if new_node and self.reached_goal(new_node):
+    #             self._path = self.generate_final_path(new_node)
+    #             self._goal_reached = True
                 
-                path_x = [point[0] for point in self._path]
-                path_y = [point[1] for point in self._path]
-                ax.plot(path_x, path_y, 'r-', linewidth=3, zorder=5, label='Final Path')
-                ax.scatter(path_x, path_y, c='red', s=50, zorder=6, edgecolors='darkred', linewidths=1.5)
+    #             path_x = [point[0] for point in self._path]
+    #             path_y = [point[1] for point in self._path]
+    #             ax.plot(path_x, path_y, 'r-', linewidth=3, zorder=5, label='Final Path')
+    #             ax.scatter(path_x, path_y, c='red', s=50, zorder=6, edgecolors='darkred', linewidths=1.5)
                 
-                ax.set_title(f"{title} - Goal Reached! Iteration {i+1}", 
-                           fontsize=14, fontweight='bold', color='green')
-                plt.pause(0.1)
-                break
+    #             ax.set_title(f"{title} - Goal Reached! Iteration {i+1}", 
+    #                        fontsize=14, fontweight='bold', color='green')
+    #             plt.pause(0.1)
+    #             break
         
-        ax.set_xlim(-1, self._map_size + 1)
-        ax.set_ylim(-1, self._map_size + 1)
-        ax.set_aspect('equal')
-        ax.grid(True, alpha=0.3, linestyle='--')
-        ax.set_xlabel('X', fontsize=12)
-        ax.set_ylabel('Y', fontsize=12)
-        ax.legend(loc='upper right', fontsize=10)
-        plt.tight_layout()
-        return fig, ax
+    #     ax.set_xlim(-1, self._map_size + 1)
+    #     ax.set_ylim(-1, self._map_size + 1)
+    #     ax.set_aspect('equal')
+    #     ax.grid(True, alpha=0.3, linestyle='--')
+    #     ax.set_xlabel('X', fontsize=12)
+    #     ax.set_ylabel('Y', fontsize=12)
+    #     ax.legend(loc='upper right', fontsize=10)
+    #     plt.tight_layout()
+    #     return fig, ax
 
-def visualize_rrt_example():
-    """
-    Example function demonstrating how to use RRT with visualization.
-    """
-    obstacles = Obstacle()
-    obstacles.default()
+# def visualize_rrt_example(random_rate):
+#     """
+#     Example function demonstrating how to use RRT with visualization.
+#     """
+#     obstacles = Obstacle()
+#     obstacles.default()
     
-    start_node = Node(0.5, 9.5)
-    goal_node = Node(10, 0)
-    map_size = 10
+#     start_node = Node(0.5, 9.5)
+#     goal_node = Node(10, 0)
+#     map_size = 10
     
-    rrt = RRT(start=start_node, 
-            goal=goal_node, 
-            map_size=map_size, 
-            obstacle=obstacles, 
-            iter=50000, 
-            step_size=0.3)
+#     rrt = RRT(start=start_node, 
+#             goal=goal_node, 
+#             map_size=map_size, 
+#             obstacle=obstacles, 
+#             iter=50000, 
+#             step_size=0.3,
+#             random_rate= 0.1)
     
-    print("Running RRT path planning...")
-    rrt.plan()
+#     print("Running RRT path planning...")
+#     rrt.plan()
     
-    # Save run data (this generates a unique key and image filename)
-    data = rrt.save_run_data("rrt_results.csv", 
-                             start_pos=(start_node.x, start_node.y),
-                             goal_pos=(goal_node.x, goal_node.y))
+#     # Save run data (this generates a unique key and image filename)
+#     data = rrt.save_run_data("rrt_results.csv", 
+#                              start_pos=(start_node.x, start_node.y),
+#                              goal_pos=(goal_node.x, goal_node.y))
     
-    # Get the image filename from the saved data
-    image_filename = data['image_filename']
+#     # Get the image filename from the saved data
+#     image_filename = data['image_filename']
     
-    if rrt._goal_reached:
-        print(f"✓ Goal reached! Path found with {len(rrt._path)} nodes.")
-        fig, ax = rrt.visualize(title="RRT Maze Solving - Final Result", 
-                               save_image=True, image_filename=image_filename)
-        plt.show()
-    else:
-        print("✗ Goal not reached. Showing current tree:")
-        fig, ax = rrt.visualize(title="RRT Maze Solving - No Path Found",
-                               save_image=True, image_filename=image_filename)
-        plt.show()
+#     if rrt._goal_reached:
+#         print(f"✓ Goal reached! Path found with {len(rrt._path)} nodes.")
+#         fig, ax = rrt.visualize(title="RRT Maze Solving - Final Result", 
+#                                save_image=True, image_filename=image_filename)
+#         plt.show()
+#     else:
+#         print("✗ Goal not reached. Showing current tree:")
+#         fig, ax = rrt.visualize(title="RRT Maze Solving - No Path Found",
+#                                save_image=True, image_filename=image_filename)
+#         plt.show()
     
-    return rrt
+#     return rrt
 
 def run_multiple_experiments(num_runs=3, start_pos=(0.5, 9.5), goal_pos=(10, 0), 
-                             map_size=10, max_iter=50000, step_size=0.3, 
+                             map_size=10, max_iter=50000, step_size=0.3, random_rate = 0.1,
                              visualize=False, save_file="rrt_results.csv"):
     """
     Run multiple RRT experiments and save all results.
@@ -662,7 +590,8 @@ def run_multiple_experiments(num_runs=3, start_pos=(0.5, 9.5), goal_pos=(10, 0),
                  map_size=map_size, 
                  obstacle=obstacles, 
                  iter=max_iter, 
-                 step_size=step_size)
+                 step_size=step_size,
+                 random_rate=random_rate)
         
         rrt.plan()
         
@@ -716,10 +645,14 @@ def run_multiple_experiments(num_runs=3, start_pos=(0.5, 9.5), goal_pos=(10, 0),
 
 
 if __name__ == "__main__":
+    #Run the value around 0.5 to test the curve of the result.
+    test_value = [0.3, 0.4, 0.45, 0.48, 0.5, 0.52, 0.55, 0.6, 0.7, 0.8]
     # Run single example with visualization
-    for i in range(1, 11): #Run from 1 to 4
-        rrt_result = run_multiple_experiments(100,(0.5,10),(10,0), 
-        10, 50000, i/10)
-    
+    for i in test_value: 
+        for j in range(1,11):
+            rrt_result = run_multiple_experiments(num_runs=100, start_pos=(0,0.5),goal_pos=(10,9.5), 
+            map_size=10, max_iter= 10000,visualize= False, step_size=i,save_file="rrt_results_maze3_postfix.csv", random_rate = j/10)
+        
     # Uncomment below to run multiple experiments without visualization
     # results = run_multiple_experiments(num_runs=20, visualize=False)
+    #Random rate changes first, step size changes later
