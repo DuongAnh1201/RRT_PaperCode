@@ -17,9 +17,10 @@ A line-based fallback is included at the bottom for comparison.
 import pandas as pd
 
 CSV_FILES = {
-    "Maze 1": "rrt_results_maze1.csv",
-    "Maze 2": "rrt_results_maze2.csv",
-    "Maze 3": "rrt_results_maze3.csv",
+    "Maze 2": "rrt_results_maze2_postfix.csv",
+    "Maze 3": "rrt_results_maze3_postfix.csv",
+    "Maze 2-coupled": "rrt_results_maze2_budgent100k_coupled.csv",
+    "Maze 3-coupled": "rrt_results_maze3_budget100k_coupled.csv"
 }
 
 # The 6 coarse step-size levels from the original factorial design.
