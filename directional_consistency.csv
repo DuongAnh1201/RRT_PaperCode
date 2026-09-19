@@ -1,0 +1,10 @@
+family,maze,wins,total,cell
+original,maze1,7,20,7 / 20
+original,maze2,19,20,19 / 20
+original,maze3,19,20,19 / 20
+tol0.2,maze1,12,20,12 / 20
+tol0.2,maze2,19,20,19 / 20
+tol0.2,maze3,20,20,20 / 20
+tol0.3,maze1,10,20,10 / 20
+tol0.3,maze2,20,20,20 / 20
+tol0.3,maze3,15,20,15 / 20
