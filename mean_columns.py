@@ -21,11 +21,18 @@ column-mean claim was paired with individual-cell numbers.
 import pandas as pd
 
 CSV_FILES = {
-    "Maze 2 Original" : "rrt_results_maze2_postfix.csv",
-    "Maze 2 replicate" : "rrt_results_maze2_replication.csv"
+    "Maze 1 Original": "rrt_results_maze1_postfix.csv",
+    "Maze 2 Original": "rrt_results_maze2_postfix.csv",
+    "Maze 3 Original": "rrt_results_maze3_postfix.csv",
+    "Maze 1 Tol 0.2" : "rrt_results_maze1_tol0.2.csv",
+    "Maze 1 Tol 0.3" : "rrt_results_maze1_tol0.3.csv",
+    "Maze 2 Tol 0.2" : "rrt_results_maze2_tol0.2.csv",
+    "Maze 2 Tol 0.3" : "rrt_results_maze2_tol0.3.csv",
+    "Maze 3 Tol 0.2" : "rrt_results_maze3_tol0.2.csv",
+    "Maze 3 Tol 0.3" : "rrt_results_maze3_tol0.3.csv",
 }
 
-COARSE_STEPS = [0.4, 0.5, 0.6]
+COARSE_STEPS = [0.3, 0.4, 0.45, 0.48, 0.5, 0.52, 0.55, 0.6, 0.7, 0.8]
 TOL = 1e-9
 
 
@@ -59,6 +66,16 @@ def analyze(path, maze_name):
     col_min = col_means["column_mean"].min()
     col_max = col_means["column_mean"].max()
 
+    # --- 3. Row means (average over step_size, per random rate) ---
+    row_means = (
+        coarse.groupby("random_rate")["success"]
+        .mean()
+        .reset_index(name="row_mean")
+        .sort_values("random_rate")
+    )
+    row_min = row_means["row_mean"].min()
+    row_max = row_means["row_mean"].max()
+
     overall_mean = coarse["success"].mean()
 
     print(f"\n{'='*60}")
@@ -67,15 +84,20 @@ def analyze(path, maze_name):
     print(f"  Overall mean success rate:      {overall_mean*100:.1f}%")
     print(f"  Individual-cell range:          {cell_min*100:.0f}% to {cell_max*100:.0f}%")
     print(f"  Column-mean range (per step):   {col_min*100:.0f}% to {col_max*100:.0f}%")
+    print(f"  Row-mean range (per rr):        {row_min*100:.0f}% to {row_max*100:.0f}%")
     print(f"\n  Per-step-size column means:")
     for _, row in col_means.iterrows():
         print(f"    step {row['step_size']:.2f}:  {row['column_mean']*100:.1f}%")
+    print(f"\n  Per-random-rate row means:")
+    for _, row in row_means.iterrows():
+        print(f"    rr {row['random_rate']:.1f}:    {row['row_mean']*100:.1f}%")
 
     return {
         "maze": maze_name,
         "overall_mean": overall_mean,
         "cell_range": (cell_min, cell_max),
         "col_range": (col_min, col_max),
+        "row_range": (row_min, row_max),
     }
 
 
