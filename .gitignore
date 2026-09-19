@@ -43,4 +43,21 @@ Thumbs.db
 
 #images
 rrt_images_maze1
+rrt_images_maze_fixed_goal_tolerance1
+rrt_images_maze_fixed_goal_tolerance2
+rrt_images_maze_fixed_goal_tolerance3
+rrt_images_maze1
 rrt_images_maze2
+rrt_images_maze2_budget100k
+rrt_images_maze2_power_n1000
+rrt_images_maze2_replication
+rrt_images_maze3
+rrt_images_maze3_budget100k
+rrt_images_maze3_power_n1000
+rrt_images_maze3_replication
+rrt_results_maze1_0.9rr
+rrt_results_maze1_postfix
+rrt_results_maze2_0.9rr
+rrt_results_maze2_postfix
+rrt_results_maze3_0.9rr
+rrt_results_maze3_postfix
