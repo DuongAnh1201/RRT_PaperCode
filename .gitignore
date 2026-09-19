@@ -42,6 +42,7 @@ Thumbs.db
 *.pyc
 
 #images
+rrt_images
 rrt_images_maze1
 rrt_images_maze_fixed_goal_tolerance1
 rrt_images_maze_fixed_goal_tolerance2
