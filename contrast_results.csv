@@ -1,0 +1,10 @@
+dataset,maze,contrast_from_csv,contrast_from_fit,ci_low,ci_high,excludes_zero
+coupled,maze1,-1.33,-1.33,-4.61,2.12,False
+coupled,maze2,12.61,12.61,9.18,16.16,True
+coupled,maze3,5.94,5.94,1.93,10.08,True
+tol0.2,maze1,1.44,1.44,-1.97,4.54,False
+tol0.2,maze2,8.67,8.67,5.21,12.06,True
+tol0.2,maze3,8.22,8.22,4.4,12.22,True
+tol0.3,maze1,0.06,0.06,-2.95,3.2,False
+tol0.3,maze2,14.78,14.78,11.48,18.49,True
+tol0.3,maze3,5.39,5.39,1.49,9.14,True
