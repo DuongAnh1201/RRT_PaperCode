@@ -4,7 +4,7 @@ Code and data for the paper *"Heading Intersection and Step-Size Effect in Goal-
 
 The study runs a factorial experiment on goal-biased RRT in three 2D mazes and tests two things:
 
-1. **Obstruction placement:** Maze 1 and Maze 2 are matched on wall count, density, and obstruction count, and differ only in whether a wall blocks the straight line from start to goal. Mean success falls from 77.8% (Maze 1) to 24.7% (Maze 2). Maze 3 matches Maze 2's obstruction count with different positions and reaches 51.3%.
+1. **Obstruction placement:** Maze 1 and Maze 2 have nearly identical wall length and structure. Maze 1 has four obstructions along the start-to-goal line; Maze 2 has the same four plus a fifth wall at y = 8 that closes the gap Maze 1 leaves open. Mean success falls from 77.8% (Maze 1) to 24.7% (Maze 2). Maze 3 matches Maze 2's obstruction count (five) with different positions and reaches 51.3%.
 2. **Step-size peak:** success peaks locally near step size 0.5 in both obstructed mazes (2 and 3) and not in Maze 1. The peak persists when the goal tolerance is fixed independently of step size.
 
 ---
