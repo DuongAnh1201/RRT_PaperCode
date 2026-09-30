@@ -1,6 +1,6 @@
 # Heading Intersection and Step-Size Effect in Goal-Biased RRT
 
-Code and data for the paper *"Heading Intersection and Step-Size Effect in Goal-Biased RRT"* (Nguyen et al., submitted to IEEE Access).
+Code and data for the paper *"Heading Intersection and Step-Size Effect in Goal-Biased RRT"* (Nguyen and Mukherjee, manuscript in preparation).
 
 The study runs a factorial experiment on goal-biased RRT in three 2D mazes and tests two things:
 
@@ -94,6 +94,6 @@ python contrast_result.py
 ## Citation
 
 ```
-D. A. Nguyen et al., "Heading Intersection and Step-Size Effect in Goal-Biased RRT,"
-submitted to IEEE Access, 2026.
+D. A. Nguyen and S. Mukherjee, "Heading Intersection and Step-Size Effect in Goal-Biased RRT,"
+manuscript in preparation, 2026.
 ```
