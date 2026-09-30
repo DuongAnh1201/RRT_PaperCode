@@ -6,6 +6,8 @@ from matplotlib.patches import Rectangle
 import csv
 from datetime import datetime
 import os
+from testmazes import obstacles as MAZES
+import pandas as pd
 
 class Obstacle:
     def __init__(self, obstacle=None):
@@ -85,7 +87,7 @@ class RRT:
         nearest_node = node_list[np.argmin(distances)]
         return nearest_node
     
-    def plan(self):
+    def plan(self, goal_tolerance=None):
         """Main RRT planning loop"""
         for i in range(self._max_iter):
             rand_node = self.random_node()
@@ -96,7 +98,7 @@ class RRT:
                 new_node.parent = nearest_node
                 self._node_list.append(new_node)
 
-                if self.reached_goal(new_node):
+                if self.reached_goal(new_node, goal_tolerance):
                     self._path = self.generate_final_path(new_node)
                     self._goal_reached = True
                     self._iterations_used = i + 1
@@ -236,10 +238,12 @@ class RRT:
 
         return True
     
-    def reached_goal(self, node):
+    def reached_goal(self, node, goal_tolerance=None):
         """Check if the node has reached the goal."""
+        if goal_tolerance is None:
+            goal_tolerance = self.step_size
         dist = math.hypot(node.x - self._goal.x, node.y - self._goal.y)
-        return dist <= self.step_size and self.is_collision_free(node, self._goal)
+        return dist <= goal_tolerance and self.is_collision_free(node, self._goal)
 
     def generate_final_path(self, goal_node):
         """Generate the final path from the start to the goal."""
@@ -261,27 +265,30 @@ class RRT:
             total_length += math.hypot(dx, dy)
         return total_length
     
-    def save_run_data(self, filename="rrt_results.csv", start_pos=None, goal_pos=None):
+    def save_run_data(self, filename="rrt_results.csv", start_pos=None, goal_pos=None, goal_tolerance=None):
         """
         Save the current run's data to a CSV file.
-        
+
         Args:
             filename: Name of the CSV file to save to (default: "rrt_results.csv")
             start_pos: Tuple (x, y) of start position (optional, will use self._start if not provided)
             goal_pos: Tuple (x, y) of goal position (optional, will use self._goal if not provided)
+            goal_tolerance: Goal tolerance used for this run
         """
         # Get positions
         if start_pos is None:
             start_pos = (self._start.x, self._start.y)
         if goal_pos is None:
             goal_pos = (self._goal.x, self._goal.y)
-        
+        if goal_tolerance is None:
+            goal_tolerance = self.step_size
+
         # Calculate path length
         path_length = self.get_path_length() if self._goal_reached else 0.0
-        
+
         # Generate unique key for linking CSV and image
         unique_key = datetime.now().strftime('%Y%m%d_%H%M%S_%f')[:-3]  # Include milliseconds
-        
+
         # Prepare data
         data = {
             'run_key': unique_key,
@@ -293,6 +300,7 @@ class RRT:
             'path_nodes': len(self._path) if self._path else 0,
             'step_size': self.step_size,
             'random_rate': self._random_rate,
+            'goal_tolerance': goal_tolerance,
             'start_x': start_pos[0],
             'start_y': start_pos[1],
             'goal_x': goal_pos[0],
@@ -300,24 +308,24 @@ class RRT:
             'map_size': self._map_size,
             'image_filename': f"rrt_{unique_key}.png"
         }
-        
+
         # Check if file exists to determine if we need headers
         file_exists = os.path.isfile(filename)
-        
+
         # Write to CSV
         with open(filename, 'a', newline='') as csvfile:
-            fieldnames = ['run_key', 'timestamp', 'path_found', 'iterations', 'nodes_in_tree', 
-                         'path_length', 'path_nodes', 'step_size', 'random_rate', 'start_x', 'start_y', 
-                         'goal_x', 'goal_y', 'map_size', 'image_filename']
+            fieldnames = ['run_key', 'timestamp', 'path_found', 'iterations', 'nodes_in_tree',
+                         'path_length', 'path_nodes', 'step_size', 'random_rate', 'goal_tolerance',
+                         'start_x', 'start_y', 'goal_x', 'goal_y', 'map_size', 'image_filename']
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-            
+
             # Write header if file is new
             if not file_exists:
                 writer.writeheader()
-            
+
             # Write data row
             writer.writerow(data)
-        
+
         print(f"✓ Run data saved to {filename} (Key: {unique_key})")
         return data
     
@@ -343,8 +351,8 @@ class RRT:
         print(f"✓ Chart saved to {image_path}")
         return image_path
     
-    def visualize(self, title="RRT Path Planning", show_tree=True, show_path=True, 
-                  figsize=(10, 10), save_image=False, image_filename=None):
+    def visualize(self, title="RRT Path Planning", show_tree=True, show_path=True,
+                  figsize=(10, 10), save_image=False, image_filename=None, image_folder="rrt_images"):
         """
         Visualize the RRT tree, obstacles, start, goal, and path.
         
@@ -441,7 +449,7 @@ class RRT:
         if save_image:
             if image_filename is None:
                 image_filename = f"rrt_{datetime.now().strftime('%Y%m%d_%H%M%S_%f')[:-3]}.png"
-            self.save_figure(fig, image_filename)
+            self.save_figure(fig, image_filename, folder=image_folder)
         
         return fig, ax
     
@@ -554,12 +562,14 @@ class RRT:
     
 #     return rrt
 
-def run_multiple_experiments(num_runs=3, start_pos=(0.5, 9.5), goal_pos=(10, 0), 
-                             map_size=10, max_iter=50000, step_size=0.3, random_rate = 0.1,
-                             visualize=False, save_file="rrt_results.csv"):
+def run_multiple_experiments(num_runs=3, start_pos=(0.5, 9.5), goal_pos=(10, 0),
+                             map_size=10, max_iter=50000, step_size=0.3, random_rate=0.1,
+                             goal_tolerance=None, obstacle_list=None,
+                             visualize=False, save_file="rrt_results.csv",
+                             image_folder="rrt_images"):
     """
     Run multiple RRT experiments and save all results.
-    
+
     Args:
         num_runs: Number of experiments to run
         start_pos: Tuple (x, y) of start position
@@ -567,92 +577,140 @@ def run_multiple_experiments(num_runs=3, start_pos=(0.5, 9.5), goal_pos=(10, 0),
         map_size: Size of the map
         max_iter: Maximum iterations per run
         step_size: Step size for RRT
+        random_rate: Random sampling rate
+        goal_tolerance: Tolerance for reaching the goal (default: step_size)
+        obstacle_list: List of obstacle segments (default: built-in maze)
         visualize: Whether to show visualization (only shows last run)
         save_file: CSV file to save results to
+        image_folder: Folder to save images to
     """
-    obstacles = Obstacle()
-    obstacles.default()
-    
+    if obstacle_list is not None:
+        obstacles = Obstacle(obstacle_list)
+        obstacles.default()
+    else:
+        obstacles = Obstacle()
+        obstacles.default()
+
     results = []
     success_count = 0
-    
+
     print(f"Running {num_runs} experiments...")
     print("-" * 60)
-    
+
     for run_num in range(1, num_runs + 1):
         print(f"Run {run_num}/{num_runs}...", end=" ")
-        
+
         start_node = Node(start_pos[0], start_pos[1])
         goal_node = Node(goal_pos[0], goal_pos[1])
-        
-        rrt = RRT(start=start_node, 
-                 goal=goal_node, 
-                 map_size=map_size, 
-                 obstacle=obstacles, 
-                 iter=max_iter, 
+
+        rrt = RRT(start=start_node,
+                 goal=goal_node,
+                 map_size=map_size,
+                 obstacle=obstacles,
+                 iter=max_iter,
                  step_size=step_size,
                  random_rate=random_rate)
-        
-        rrt.plan()
-        
+
+        rrt.plan(goal_tolerance=goal_tolerance)
+
         # Save data (this generates a unique key and image filename)
-        data = rrt.save_run_data(save_file, start_pos, goal_pos)
+        data = rrt.save_run_data(save_file, start_pos, goal_pos, goal_tolerance=goal_tolerance)
         results.append(data)
-        
+
         # Get the image filename from the saved data
         image_filename = data['image_filename']
-        
+
         if rrt._goal_reached:
             success_count += 1
             print(f"✓ Success (Path length: {data['path_length']:.2f}, Nodes: {data['nodes_in_tree']})")
         else:
             print(f"✗ Failed (Nodes: {data['nodes_in_tree']})")
-        
+
         # Save image for this run
         if rrt._goal_reached:
             fig, ax = rrt.visualize(title=f"RRT Run {run_num} - Final Result",
-                                   save_image=True, image_filename=image_filename)
+                                   save_image=True, image_filename=image_filename,
+                                   image_folder=image_folder)
         else:
             fig, ax = rrt.visualize(title=f"RRT Run {run_num} - No Path Found",
-                                   save_image=True, image_filename=image_filename)
-        
+                                   save_image=True, image_filename=image_filename,
+                                   image_folder=image_folder)
+
         # Close figure to free memory (only show if it's the last run and visualize=True)
         if visualize and run_num == num_runs:
             plt.show()
         else:
             plt.close(fig)
-    
+
     # Print summary statistics
     print("-" * 60)
     print(f"Summary Statistics ({num_runs} runs):")
     print(f"  Success Rate: {success_count}/{num_runs} ({100*success_count/num_runs:.1f}%)")
-    
+
     if success_count > 0:
         successful_runs = [r for r in results if r['path_found']]
         avg_path_length = sum(r['path_length'] for r in successful_runs) / len(successful_runs)
         avg_nodes = sum(r['nodes_in_tree'] for r in successful_runs) / len(successful_runs)
         avg_path_nodes = sum(r['path_nodes'] for r in successful_runs) / len(successful_runs)
-        
+
         print(f"  Average Path Length: {avg_path_length:.2f}")
         print(f"  Average Nodes in Tree: {avg_nodes:.0f}")
         print(f"  Average Path Nodes: {avg_path_nodes:.0f}")
-    
+
     avg_all_nodes = sum(r['nodes_in_tree'] for r in results) / len(results)
     print(f"  Average Nodes (all runs): {avg_all_nodes:.0f}")
     print(f"  Results saved to: {save_file}")
-    
+
     return results
 
 
 if __name__ == "__main__":
-    #Run the value around 0.5 to test the curve of the result.
-    test_value = [0.3, 0.4, 0.45, 0.48, 0.5, 0.52, 0.55, 0.6, 0.7, 0.8]
-    # Run single example with visualization
-    for i in test_value: 
-        for j in range(1,11):
-            rrt_result = run_multiple_experiments(num_runs=100, start_pos=(0,0.5),goal_pos=(10,9.5), 
-            map_size=10, max_iter= 10000,visualize= False, step_size=i,save_file="rrt_results_maze3_postfix.csv", random_rate = j/10)
-        
-    # Uncomment below to run multiple experiments without visualization
-    # results = run_multiple_experiments(num_runs=20, visualize=False)
-    #Random rate changes first, step size changes later
+    # ─── Resume power runs for Maze 3 (n=1000, coupled) ───
+    step_sizes = [0.4, 0.5, 0.6]
+    random_rates = [r / 10 for r in range(1, 11)]
+    TARGET_PER_CELL = 1000
+
+    maze_idx = 3
+    maze = MAZES[maze_idx - 1]          # MAZES is 0-indexed; Maze 3 is index 2
+    csv_file = f"rrt_results_maze{maze_idx}_power_n1000_coupled.csv"
+    img_folder = f"rrt_images_maze{maze_idx}_power_n1000"
+
+    # Count how many runs already exist per (step_size, random_rate) cell
+    done_counts = {}
+    if os.path.isfile(csv_file):
+        prev = pd.read_csv(csv_file)
+        # round to avoid float-key mismatches (0.30000000000000004 etc.)
+        prev["step_size"] = prev["step_size"].round(3)
+        prev["random_rate"] = prev["random_rate"].round(3)
+        done_counts = (prev.groupby(["step_size", "random_rate"])
+                           .size().to_dict())
+
+    print("=" * 60)
+    print(f"Maze {maze_idx} | Resuming power runs (n={TARGET_PER_CELL}, coupled)")
+    print(f"  CSV: {csv_file}")
+    print("=" * 60)
+
+    for step in step_sizes:
+        for rr in random_rates:
+            already = done_counts.get((round(step, 3), round(rr, 3)), 0)
+            remaining = TARGET_PER_CELL - already
+
+            if remaining <= 0:
+                print(f"  step {step}, rr {rr}: {already}/{TARGET_PER_CELL} — complete, skipping")
+                continue
+
+            print(f"  step {step}, rr {rr}: {already}/{TARGET_PER_CELL} done, running {remaining} more")
+            run_multiple_experiments(
+                num_runs=remaining,          # only the shortfall
+                start_pos=(0, 0.5),
+                goal_pos=(10, 9.5),
+                map_size=10,
+                max_iter=10000,
+                step_size=step,
+                random_rate=rr,
+                goal_tolerance=step,         # coupled
+                obstacle_list=maze,
+                visualize=False,
+                save_file=csv_file,
+                image_folder=img_folder,
+            )
