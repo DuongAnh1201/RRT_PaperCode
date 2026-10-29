@@ -217,9 +217,28 @@ class RRT:
                 intersect_node = Node(x, y)
 
             # -------- CASE 4: BOTH NON-VERTICAL --------
+                        # -------- CASE 4: BOTH NON-VERTICAL --------
             else:
                 if abs(a - a_i) < 1e-6:
-                    # Parallel lines
+                    # Parallel lines.
+                    # Collinear overlap check (mirrors CASE 1 for vertical walls).
+                    # If the path lies on the SAME line as a horizontal wall
+                    # (equal intercept b) and their x-ranges overlap, the path
+                    # runs along the wall and is treated as a collision.
+                    # Without this, a node sitting in a gap on a wall's line
+                    # (e.g. (4, 1) next to wall (5, 1)-(8, 1)) could extend
+                    # horizontally onto the wall and be accepted. This needs
+                    # integer-y nodes, so it only arises with the integer
+                    # sampler, and is rare for step <= 1 (the tree is dense,
+                    # so the nearest node to a sample on a wall line is usually
+                    # off the line). It becomes more likely for larger steps,
+                    # where the tree is sparser. It cannot let the tree cross a
+                    # wall: any move off the wall line intersects the wall at
+                    # its start point and is rejected.
+                    if abs(b - b_i) < 1e-6:
+                        if not (max(from_node.x, to_node.x) < min(m_x, n_x) or
+                                min(from_node.x, to_node.x) > max(m_x, n_x)):
+                            return False
                     continue
                 else:
                     # Compute true intersection point
