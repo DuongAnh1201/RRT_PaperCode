@@ -76,7 +76,7 @@ class RRT:
     def random_node(self):
         """Generate a random node in the map."""
         if random.random() <= self._random_rate:
-            rand_node = Node(random.randint(0, self._map_size), random.randint(0, self._map_size))
+            rand_node = Node(random.uniform(0, self._map_size), random.uniform(0, self._map_size))
         else:
             rand_node = Node(self._goal.x, self._goal.y)
         return rand_node
@@ -626,21 +626,21 @@ def run_multiple_experiments(num_runs=3, start_pos=(0.5, 9.5), goal_pos=(10, 0),
         else:
             print(f"✗ Failed (Nodes: {data['nodes_in_tree']})")
 
-        # Save image for this run
-        if rrt._goal_reached:
-            fig, ax = rrt.visualize(title=f"RRT Run {run_num} - Final Result",
-                                   save_image=True, image_filename=image_filename,
-                                   image_folder=image_folder)
-        else:
-            fig, ax = rrt.visualize(title=f"RRT Run {run_num} - No Path Found",
-                                   save_image=True, image_filename=image_filename,
-                                   image_folder=image_folder)
+        # # Save image for this run
+        # if rrt._goal_reached:
+        #     fig, ax = rrt.visualize(title=f"RRT Run {run_num} - Final Result",
+        #                            save_image=True, image_filename=image_filename,
+        #                            image_folder=image_folder)
+        # else:
+        #     fig, ax = rrt.visualize(title=f"RRT Run {run_num} - No Path Found",
+        #                            save_image=True, image_filename=image_filename,
+        #                            image_folder=image_folder)
 
-        # Close figure to free memory (only show if it's the last run and visualize=True)
-        if visualize and run_num == num_runs:
-            plt.show()
-        else:
-            plt.close(fig)
+        # # Close figure to free memory (only show if it's the last run and visualize=True)
+        # if visualize and run_num == num_runs:
+        #     plt.show()
+        # else:
+        #     plt.close(fig)
 
     # Print summary statistics
     print("-" * 60)
@@ -665,15 +665,15 @@ def run_multiple_experiments(num_runs=3, start_pos=(0.5, 9.5), goal_pos=(10, 0),
 
 
 if __name__ == "__main__":
-    # ─── Resume power runs for Maze 3 (n=1000, coupled) ───
+     #(n=1000, decoupled) ───
     step_sizes = [0.4, 0.5, 0.6]
     random_rates = [r / 10 for r in range(1, 11)]
     TARGET_PER_CELL = 1000
 
-    maze_idx = 3
+    maze_idx = 1
     maze = MAZES[maze_idx - 1]          # MAZES is 0-indexed; Maze 3 is index 2
-    csv_file = f"rrt_results_maze{maze_idx}_power_n1000_coupled.csv"
-    img_folder = f"rrt_images_maze{maze_idx}_power_n1000"
+    csv_file = f"rrt_results_maze{maze_idx}_power_n1000_decoupled_non_lattice_t0.2.csv"
+    img_folder = f"rrt_images_maze{maze_idx}_power_n1000_decoupled_non_lattice_t0.2"
 
     # Count how many runs already exist per (step_size, random_rate) cell
     done_counts = {}
@@ -686,7 +686,7 @@ if __name__ == "__main__":
                            .size().to_dict())
 
     print("=" * 60)
-    print(f"Maze {maze_idx} | Resuming power runs (n={TARGET_PER_CELL}, coupled)")
+    print(f"Maze {maze_idx} | Resuming power runs (n={TARGET_PER_CELL}, decoupled)")
     print(f"  CSV: {csv_file}")
     print("=" * 60)
 
@@ -708,7 +708,7 @@ if __name__ == "__main__":
                 max_iter=10000,
                 step_size=step,
                 random_rate=rr,
-                goal_tolerance=step,         # coupled
+                goal_tolerance=0.2,         # decoupled
                 obstacle_list=maze,
                 visualize=False,
                 save_file=csv_file,
