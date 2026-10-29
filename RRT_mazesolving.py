@@ -58,7 +58,8 @@ class Node:
         self.cost = 0
 
 class RRT:
-    def __init__(self, start, goal, map_size, obstacle=obs, iter=500, step_size=1, random_rate = 0.1):
+    def __init__(self, start, goal, map_size, obstacle=obs, iter=500, step_size=1, random_rate = 0.1, sampler = "continuous"):
+        self._sampler = sampler
         self._start = start
         self._goal = goal
         self._map_size = map_size
@@ -76,7 +77,12 @@ class RRT:
     def random_node(self):
         """Generate a random node in the map."""
         if random.random() <= self._random_rate:
-            rand_node = Node(random.uniform(0, self._map_size), random.uniform(0, self._map_size))
+            if self._sampler == "integer":
+                rand_node = Node(random.randint(0, self._map_size), random.randint(0, self._map_size))
+            elif self._sampler == "continuous":
+                rand_node = Node(random.uniform(0, self._map_size), random.uniform(0, self._map_size))
+            else:
+                raise ValueError(f"Unknown sampler: {self._sampler}")
         else:
             rand_node = Node(self._goal.x, self._goal.y)
         return rand_node
@@ -325,6 +331,7 @@ class RRT:
             'goal_x': goal_pos[0],
             'goal_y': goal_pos[1],
             'map_size': self._map_size,
+            'sampler': self._sampler,
             'image_filename': f"rrt_{unique_key}.png"
         }
 
@@ -334,8 +341,8 @@ class RRT:
         # Write to CSV
         with open(filename, 'a', newline='') as csvfile:
             fieldnames = ['run_key', 'timestamp', 'path_found', 'iterations', 'nodes_in_tree',
-                         'path_length', 'path_nodes', 'step_size', 'random_rate', 'goal_tolerance',
-                         'start_x', 'start_y', 'goal_x', 'goal_y', 'map_size', 'image_filename']
+                     'path_length', 'path_nodes', 'step_size', 'random_rate', 'goal_tolerance',
+                         'start_x', 'start_y', 'goal_x', 'goal_y', 'map_size', 'sampler', 'image_filename']
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
 
             # Write header if file is new
@@ -585,7 +592,7 @@ def run_multiple_experiments(num_runs=3, start_pos=(0.5, 9.5), goal_pos=(10, 0),
                              map_size=10, max_iter=50000, step_size=0.3, random_rate=0.1,
                              goal_tolerance=None, obstacle_list=None,
                              visualize=False, save_file="rrt_results.csv",
-                             image_folder="rrt_images"):
+                             image_folder="rrt_images", sampler="continuous"):
     """
     Run multiple RRT experiments and save all results.
 
@@ -628,7 +635,8 @@ def run_multiple_experiments(num_runs=3, start_pos=(0.5, 9.5), goal_pos=(10, 0),
                  obstacle=obstacles,
                  iter=max_iter,
                  step_size=step_size,
-                 random_rate=random_rate)
+                 random_rate=random_rate,
+                 sampler=sampler)
 
         rrt.plan(goal_tolerance=goal_tolerance)
 
@@ -684,52 +692,93 @@ def run_multiple_experiments(num_runs=3, start_pos=(0.5, 9.5), goal_pos=(10, 0),
 
 
 if __name__ == "__main__":
-     #(n=1000, decoupled) ───
-    step_sizes = [0.4, 0.5, 0.6]
-    random_rates = [r / 10 for r in range(1, 11)]
-    TARGET_PER_CELL = 1000
+    # ─── Experiment list ────────────────────────────────────────────────
+    # Each entry = one experiment. Set "enabled": True for the ones to run.
+    #   sampler : "continuous" or "integer"
+    #   tau     : fixed goal tolerance (decoupled), or None = coupled (tau = step)
+    #   mazes   : maze numbers (1-based)
+    ALL_RR = [r / 10 for r in range(1, 11)]          # 0.1 ... 1.0
 
-    maze_idx = 1
-    maze = MAZES[maze_idx - 1]          # MAZES is 0-indexed; Maze 3 is index 2
-    csv_file = f"rrt_results_maze{maze_idx}_power_n1000_decoupled_non_lattice_t0.2.csv"
-    img_folder = f"rrt_images_maze{maze_idx}_power_n1000_decoupled_non_lattice_t0.2"
+    EXPERIMENTS = [
+        {   # Issue #62: wide step sweep, tests the gap-scale hypothesis
+            "name": "widesweep", "enabled": True,
+            "sampler": "continuous", "tau": 0.2, "mazes": [2, 3],
+            "steps": [0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0,
+                      1.1, 1.2, 1.4, 1.6, 1.8, 2.0],
+            "random_rates": [0.1, 0.2, 0.3],
+            "n": 1000,
+        },
+        {   # Issue #61: continuous sampler at tau = 0.3 (tau = 0.2 already done)
+            "name": "power", "enabled": False,
+            "sampler": "continuous", "tau": 0.3, "mazes": [1, 2, 3],
+            "steps": [0.4, 0.5, 0.6],
+            "random_rates": ALL_RR,
+            "n": 1000,
+        },
+        {   # Commensurability sweep: integer sampler, lattice-commensurate
+            # steps (0.25, 0.5, 1.0) vs non-commensurate (0.33, 0.4, 0.6)
+            "name": "commensurability", "enabled": False,
+            "sampler": "integer", "tau": 0.2, "mazes": [1, 2, 3],
+            "steps": [0.25, 0.33, 0.4, 0.5, 0.6, 1.0],
+            "random_rates": ALL_RR,
+            "n": 1000,
+        },
+    ]
 
-    # Count how many runs already exist per (step_size, random_rate) cell
-    done_counts = {}
-    if os.path.isfile(csv_file):
-        prev = pd.read_csv(csv_file)
-        # round to avoid float-key mismatches (0.30000000000000004 etc.)
-        prev["step_size"] = prev["step_size"].round(3)
-        prev["random_rate"] = prev["random_rate"].round(3)
-        done_counts = (prev.groupby(["step_size", "random_rate"])
-                           .size().to_dict())
+    # Fixed settings shared by all experiments
+    START, GOAL = (0, 0.5), (10, 9.5)
+    MAP_SIZE, MAX_ITER = 10, 10000
 
-    print("=" * 60)
-    print(f"Maze {maze_idx} | Resuming power runs (n={TARGET_PER_CELL}, decoupled)")
-    print(f"  CSV: {csv_file}")
-    print("=" * 60)
+    def tau_label(tau):
+        return "coupled" if tau is None else f"tol{tau}"
 
-    for step in step_sizes:
-        for rr in random_rates:
-            already = done_counts.get((round(step, 3), round(rr, 3)), 0)
-            remaining = TARGET_PER_CELL - already
+    for exp in EXPERIMENTS:
+        if not exp["enabled"]:
+            continue
 
-            if remaining <= 0:
-                print(f"  step {step}, rr {rr}: {already}/{TARGET_PER_CELL} — complete, skipping")
-                continue
+        for maze_idx in exp["mazes"]:
+            maze = MAZES[maze_idx - 1]                 # MAZES is 0-indexed
+            tag = f"maze{maze_idx}_{exp['name']}_{exp['sampler']}_{tau_label(exp['tau'])}"
+            csv_file = f"rrt_results_{tag}.csv"
+            img_folder = f"rrt_images_{tag}"
 
-            print(f"  step {step}, rr {rr}: {already}/{TARGET_PER_CELL} done, running {remaining} more")
-            run_multiple_experiments(
-                num_runs=remaining,          # only the shortfall
-                start_pos=(0, 0.5),
-                goal_pos=(10, 9.5),
-                map_size=10,
-                max_iter=10000,
-                step_size=step,
-                random_rate=rr,
-                goal_tolerance=0.2,         # decoupled
-                obstacle_list=maze,
-                visualize=False,
-                save_file=csv_file,
-                image_folder=img_folder,
-            )
+            # Count runs already done per (step_size, random_rate) cell
+            done_counts = {}
+            if os.path.isfile(csv_file):
+                prev = pd.read_csv(csv_file)
+                # round to avoid float-key mismatches (0.30000000000000004 etc.)
+                prev["step_size"] = prev["step_size"].round(3)
+                prev["random_rate"] = prev["random_rate"].round(3)
+                done_counts = prev.groupby(["step_size", "random_rate"]).size().to_dict()
+
+            print("=" * 60)
+            print(f"{exp['name']} | Maze {maze_idx} | sampler={exp['sampler']} | "
+                  f"{tau_label(exp['tau'])} | n={exp['n']}")
+            print(f"  CSV: {csv_file}")
+            print("=" * 60)
+
+            for step in exp["steps"]:
+                for rr in exp["random_rates"]:
+                    already = done_counts.get((round(step, 3), round(rr, 3)), 0)
+                    remaining = exp["n"] - already
+
+                    if remaining <= 0:
+                        print(f"  step {step}, rr {rr}: {already}/{exp['n']} - complete, skipping")
+                        continue
+
+                    print(f"  step {step}, rr {rr}: {already}/{exp['n']} done, running {remaining} more")
+                    run_multiple_experiments(
+                        num_runs=remaining,                 # only the shortfall
+                        start_pos=START,
+                        goal_pos=GOAL,
+                        map_size=MAP_SIZE,
+                        max_iter=MAX_ITER,
+                        step_size=step,
+                        random_rate=rr,
+                        goal_tolerance=exp["tau"] if exp["tau"] is not None else step,
+                        obstacle_list=maze,
+                        visualize=False,
+                        save_file=csv_file,
+                        image_folder=img_folder,
+                        sampler=exp["sampler"],
+                    )
